@@ -24,8 +24,8 @@ impl SVID<X509> {
     }
 
     pub fn from_path(path: &Path) -> Result<SVID<X509>> {
-        let mut f = File::open(path).expect("file not found");
-
+        let mut f = File::open(path).or(Err(ErrorKind::InvalidPath))?;
+        
         let mut contents = String::new();
         f.read_to_string(&mut contents).or(Err(ErrorKind::InvalidPath))?;
         
