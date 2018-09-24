@@ -1,5 +1,6 @@
 use hyper::Url;
 use std::string::ToString;
+use std::str::FromStr;
 
 use ::errors::*;
 
@@ -69,5 +70,21 @@ impl URI {
 impl ToString for URI {
     fn to_string(&self) -> String {
         self.uri.as_str().to_string()
+    }
+}
+
+impl FromStr for URI {
+    type Err = Error;
+
+    fn from_str(uri: &str) -> Result<URI> {
+        match uri.parse::<Url>() {
+            Ok(uri) => {
+                match URI::validate_spiffe_uri(uri) {
+                    Ok(validated_uri) => Ok(URI{ uri: validated_uri }),
+                    Err(_) => Err(ErrorKind::InvalidUri)?
+                }
+            },
+            Err(_) => Err(ErrorKind::InvalidUri)?
+        }
     }
 }
