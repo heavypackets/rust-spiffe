@@ -21,14 +21,11 @@ impl URI {
 
     pub fn validate_spiffe_uri(uri: Url) -> Result<Url> {
         match uri.scheme() {
-            "spiffe" => (), 
+            "spiffe" => (),
             _ => Err(ErrorKind::InvalidUri)?
         };
 
-        match uri.host() {
-            Some(_) => (),
-            _ => Err(ErrorKind::InvalidUri)?
-        };
+        if uri.host().is_none() { Err(ErrorKind::InvalidUri)? }
 
         match uri.path() {
             "/" => Err(ErrorKind::InvalidUri)?,
