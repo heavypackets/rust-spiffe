@@ -34,29 +34,12 @@ impl URI {
     }
 
     pub fn validate_spiffe_uri(uri: Url) -> Result<Url> {
-        match uri.scheme() {
-            "spiffe" => (),
-            _ => Err(ErrorKind::InvalidUri)?
-        };
-
-        if uri.host().is_none() { Err(ErrorKind::InvalidUri)? }
-
-        match uri.path() {
-            "/" => Err(ErrorKind::InvalidUri)?,
-            "" => Err(ErrorKind::InvalidUri)?,
-            _ => ()
-        };
-
-        if uri.query().is_some() { Err(ErrorKind::InvalidUri)? }
-        if uri.port().is_some() { Err(ErrorKind::InvalidUri)? }
-
-        match uri.username() {
-            "" => (),
-            _ => Err(ErrorKind::InvalidUri)?
-        };
-
-        if uri.password().is_some() { Err(ErrorKind::InvalidUri)? }
-        if uri.fragment().is_some() { Err(ErrorKind::InvalidUri)? }
+        if uri.query().is_some() || uri.port().is_some() || (uri.username() != "") || 
+            uri.password().is_some() || uri.fragment().is_some() || uri.host().is_none() || 
+            (uri.scheme() != "spiffe") || (uri.path() == "/") || (uri.path() == "") 
+        { 
+                Err(ErrorKind::from(&uri))?
+        }
 
         Ok(uri)
     }
