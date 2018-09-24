@@ -25,7 +25,7 @@ impl SVID<X509> {
 
     pub fn from_path(path: &Path) -> Result<SVID<X509>> {
         let mut f = File::open(path).or(Err(ErrorKind::InvalidPath))?;
-        
+
         let mut contents = String::new();
         f.read_to_string(&mut contents).or(Err(ErrorKind::InvalidPath))?;
         
@@ -59,7 +59,13 @@ impl SVID<X509> {
     }
 
     fn parse_uri(cert :&X509) -> Result<URI> {
-        for san_entry in cert.subject_alt_names().unwrap() {
+        let sans = match cert.subject_alt_names() {
+            Some(val) => val,
+            None => Err(ErrorKind::InvalidUri)?
+        };
+
+        // Assumes one valid SPIFFE uri in SAN field per SPIFFE specification - returns first found
+        for san_entry in sans {
             if let Some(uri) = san_entry.uri() {
                 if let Ok(validated_uri) = URI::from_string(uri.to_string()) {
                     return Ok(validated_uri)
