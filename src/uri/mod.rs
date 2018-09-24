@@ -19,22 +19,6 @@ impl URI {
         self.uri.host_str().unwrap().to_string()
     }
 
-    pub fn from_str(uri: &str) -> Result<URI> {
-        URI::from_string(uri.to_string())
-    }
-
-    pub fn from_string(uri: String) -> Result<URI> {
-        match uri.parse::<Url>() {
-            Ok(uri) => {
-                match URI::validate_spiffe_uri(uri) {
-                    Ok(validated_uri) => return Ok(URI{ uri: validated_uri }),
-                    Err(_) => Err(ErrorKind::InvalidUri)?
-                }
-            },
-            Err(_) => Err(ErrorKind::InvalidUri)?
-        }
-    }
-
     pub fn validate_spiffe_uri(uri: Url) -> Result<Url> {
         match uri.scheme() {
             "spiffe" => (), 

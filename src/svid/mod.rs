@@ -65,7 +65,7 @@ impl SVID<X509> {
         // Assumes one valid SPIFFE uri in SAN field per SPIFFE specification - returns first found
         for san_entry in sans {
             if let Some(uri) = san_entry.uri() {
-                if let Ok(validated_uri) = URI::from_string(uri.to_string()) {
+                if let Ok(validated_uri) = uri.parse::<URI>() {
                     return Ok(validated_uri)
                 }
             }
