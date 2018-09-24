@@ -15,7 +15,7 @@ impl URI {
     }
 
     pub fn trust_domain(&self) -> String {
-        // This unwrap should never fail -- if it does, somehthing is wrong and please file bug
+        // This unwrap should never fail -- if it does, something is wrong and please file bug
         self.uri.host_str().unwrap().to_string()
     }
 
