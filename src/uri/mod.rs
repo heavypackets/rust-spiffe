@@ -51,32 +51,18 @@ impl URI {
             _ => ()
         };
 
-        match uri.query() {
-            Some(_) => Err(ErrorKind::InvalidUri)?,
-            _ => ()
-        };
-
-        match uri.port() {
-            Some(_) => Err(ErrorKind::InvalidUri)?,
-            _ => ()
-        };
+        if uri.query().is_some() { Err(ErrorKind::InvalidUri)? }
+        if uri.port().is_some() { Err(ErrorKind::InvalidUri)? }
 
         match uri.username() {
             "" => (),
             _ => Err(ErrorKind::InvalidUri)?
         };
 
-        match uri.password() {
-            Some(_) => Err(ErrorKind::InvalidUri)?,
-            _ => ()
-        };
+        if uri.password().is_some() { Err(ErrorKind::InvalidUri)? }
+        if uri.fragment().is_some() { Err(ErrorKind::InvalidUri)? }
 
-        match uri.fragment() {
-            Some(_) => Err(ErrorKind::InvalidUri)?,
-            _ => ()
-        };
-
-        return Ok(uri)
+        Ok(uri)
     }
 }
 
