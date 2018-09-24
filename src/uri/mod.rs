@@ -2,9 +2,22 @@ use hyper::Url;
 use std::string::ToString;
 use std::str::FromStr;
 
-use ::errors::*;
+error_chain!{
+    errors { 
+        InvalidURI(uri: String) {
+            description("An error dURIng the parsing of a SPIFFE URI")
+            display("Unable to parse SVID: Not a valid SPIFFE URI {}", uri)
+        }
 
-#[derive(Clone, Debug)]
+    }
+}
+
+impl<'a> From<&'a Url> for ErrorKind {
+    fn from(url: &'a Url) -> Self {
+        ErrorKind::InvalidURI(url.as_str().to_string())
+    }
+}
+
 pub struct URI {
     uri: Url
 }
@@ -62,10 +75,10 @@ impl FromStr for URI {
             Ok(uri) => {
                 match URI::validate_spiffe_uri(uri) {
                     Ok(validated_uri) => Ok(URI{ uri: validated_uri }),
-                    Err(_) => Err(ErrorKind::InvalidUri)?
+                    Err(e) => Err(e)?
                 }
             },
-            Err(_) => Err(ErrorKind::InvalidUri)?
+            Err(_) => Err(ErrorKind::InvalidURI(uri.to_string()))?
         }
     }
 }

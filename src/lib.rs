@@ -5,4 +5,3 @@ extern crate hyper;
 
 pub mod svid;
 pub mod uri;
-pub mod errors;
