@@ -17,7 +17,7 @@ impl SVID<X509> {
         let cert = X509::from_pem(pem.as_bytes()).or(Err(ErrorKind::PEMParseError))?;
 
         if let Ok(uri) = SVID::<X509>::parse_uri(&cert) {
-            Ok(SVID::X509{leaf: cert, uri: uri})
+            Ok(SVID::X509{leaf: cert, uri})
         } else {
             Err(ErrorKind::PEMParseError)?
         }
@@ -32,7 +32,7 @@ impl SVID<X509> {
         let cert = X509::from_pem(contents.as_bytes()).or(Err(ErrorKind::PEMParseError))?;
 
         if let Ok(uri) = SVID::<X509>::parse_uri(&cert) {
-            Ok(SVID::X509{leaf: cert, uri: uri})
+            Ok(SVID::X509{leaf: cert, uri})
         } else {
             Err(ErrorKind::PEMParseError)?
         }
