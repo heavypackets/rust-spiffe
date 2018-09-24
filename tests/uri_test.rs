@@ -98,3 +98,21 @@ fn fetch_path_domain() {
     let id = "spiffe://example.org/path/to/a/new/year".parse::<URI>().unwrap();
     assert_eq!(id.path(), "/path/to/a/new/year");
 }
+
+#[test]
+fn test_equality() {
+    let id1 = "spiffe://example.org/path/".parse::<URI>().unwrap();
+    let id2 = "spiffe://example.org/path/".parse::<URI>().unwrap();
+
+    assert_eq!(id1, id2);
+    assert_eq!(id2, id1);
+}
+
+#[test]
+fn test_inequality() {
+    let id1 = "spiffe://example.org/path/".parse::<URI>().unwrap();
+    let id2 = "spiffe://example.org/someotherpath/".parse::<URI>().unwrap();
+
+    assert_ne!(id1, id2);
+    assert_ne!(id2, id1);
+}

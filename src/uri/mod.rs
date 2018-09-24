@@ -18,6 +18,7 @@ impl<'a> From<&'a Url> for ErrorKind {
     }
 }
 
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct URI {
     uri: Url
 }
