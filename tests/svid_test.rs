@@ -126,3 +126,9 @@ fn path_from_cert_path() {
     let svid = SVID::<X509>::from_path(Path::new(LEAF_CERTIFICATE_PATH)).unwrap();
     assert_eq!(svid.uri().trust_domain(), "dev.acme.com");
 }
+
+#[test]
+fn match_spiffe_uri_pem() {
+    let svid = SVID::<X509>::from_pem(GOOD_CERTIFICATE).unwrap();
+    assert_eq!(true, svid.match_spiffe_uri::<&'static str>(&GOOD_CERTIFICATE_URI).unwrap());
+}

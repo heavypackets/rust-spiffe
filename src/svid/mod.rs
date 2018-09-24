@@ -2,7 +2,6 @@ use openssl::x509::X509;
 use std::fs::File;
 use std::io::prelude::*;
 use std::ops::Deref;
-use std::cmp::PartialEq;
 use std::fmt::{Debug, Formatter};
 use std::path::Path;
 
@@ -39,16 +38,16 @@ impl SVID<X509> {
         }
     }
 
-    pub fn uri(&self) -> URI {
-        let SVID::X509{leaf: _, uri: name} = self;
+    pub fn uri(&self) -> &URI {
+        let SVID::X509{leaf: _, uri} = self;
 
-        name.clone()
+        &uri
     }
 
-    pub fn uri_ref(&self) -> &URI {
-        let SVID::X509{leaf: _, uri: name} = self;
+    pub fn leaf(&self) -> &X509 {
+        let SVID::X509{leaf, uri: _} = self;
 
-        &name
+        &leaf
     }
 
     pub fn match_spiffe_uri<T: ToString>(&self, uri: &T) -> Result<bool> {
