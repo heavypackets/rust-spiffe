@@ -2,12 +2,12 @@ use openssl::x509::X509;
 use std::fs::File;
 use std::io::prelude::*;
 use std::ops::Deref;
-use std::fmt::{Debug, Formatter};
 use std::path::Path;
 
 use ::uri::URI;
 use ::errors::*;
 
+#[derive(Debug)]
 pub enum SVID<T> {
     X509 { leaf: T, uri: URI }
 }
@@ -86,9 +86,6 @@ impl Deref for SVID<X509> {
     }
 }
 
-impl Debug for SVID<X509> {
-    fn fmt(&self, _formatter: &mut Formatter) -> ::std::result::Result<(), ::std::fmt::Error> {
-        Ok(())
     }
 }
 
