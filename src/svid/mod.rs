@@ -39,14 +39,12 @@ impl SVID<X509> {
     }
 
     pub fn uri(&self) -> &URI {
-        let SVID::X509{leaf: _, uri} = self;
-
+        let SVID::X509{uri, ..} = self;
         &uri
     }
 
     pub fn leaf(&self) -> &X509 {
-        let SVID::X509{leaf, uri: _} = self;
-
+        let SVID::X509{leaf, ..} = self;
         &leaf
     }
 
@@ -81,11 +79,8 @@ impl Deref for SVID<X509> {
     type Target = X509;
 
     fn deref(&self) -> &X509 {
-        let SVID::X509{leaf: cert, uri: _} = self;
-        &cert
-    }
-}
-
+        let SVID::X509{leaf, ..} = self;
+        &leaf
     }
 }
 
