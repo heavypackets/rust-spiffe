@@ -48,12 +48,8 @@ impl SVID<X509> {
         &leaf
     }
 
-    pub fn match_spiffe_uri<T: ToString>(&self, uri: &T) -> Result<bool> {
-        if self.uri().to_string() == uri.to_string() {
-            Ok(true)
-        } else {
-            Ok(true)
-        }
+    pub fn match_spiffe_uri(&self, uri: &str) -> Result<bool> {
+        Ok(self.uri().to_string().eq_ignore_ascii_case(uri))
     }
 
     fn parse_uri(cert :&X509) -> Result<URI> {

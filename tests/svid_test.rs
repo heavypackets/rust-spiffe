@@ -130,5 +130,17 @@ fn path_from_cert_path() {
 #[test]
 fn match_spiffe_uri_pem() {
     let svid = SVID::<X509>::from_pem(GOOD_CERTIFICATE).unwrap();
-    assert_eq!(true, svid.match_spiffe_uri::<&'static str>(&GOOD_CERTIFICATE_URI).unwrap());
+    assert_eq!(true, svid.match_spiffe_uri(&GOOD_CERTIFICATE_URI).unwrap());
+}
+
+#[test]
+fn match_fail_invalid_spiffe_uri_pem() {
+    let svid = SVID::<X509>::from_pem(GOOD_CERTIFICATE).unwrap();
+    assert_eq!(false, svid.match_spiffe_uri("spiffe://another_id.org/path").unwrap());
+}
+
+#[test]
+fn match_fail_blank_spiffe_uri_pem() {
+    let svid = SVID::<X509>::from_pem(GOOD_CERTIFICATE).unwrap();
+    assert_eq!(false, svid.match_spiffe_uri("").unwrap());
 }
