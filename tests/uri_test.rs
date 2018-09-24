@@ -93,14 +93,6 @@ fn fetch_trust_special_characters() {
     assert_eq!(id.trust_domain(), "exa^m-ple.org");
 }
 
-/*
-#[test]
-#[should_panic]
-fn fetch_trust_domain_unicode() {
-    let id = spiffe::uri::URI::from_str("spiffe://example✔/path").unwrap();
-    assert_eq!(id.trust_domain(), "example✔");
-} */
-
 #[test]
 fn fetch_path_domain() {
     let id = "spiffe://example.org/path/to/a/new/year".parse::<URI>().unwrap();
