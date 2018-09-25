@@ -10,7 +10,7 @@ use uri::URI;
 error_chain!{
     errors {
         InvalidFilePath(path: String) {
-            description("An IO error during the parsing of an SVID caused")
+            description("An IO error during the parsing of an SVID")
             display("Unable to parse SVID: Invalid file path {}", path)
         }
 
