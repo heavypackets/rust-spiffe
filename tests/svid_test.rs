@@ -4,6 +4,7 @@ extern crate openssl;
 use spiffe::svid::SVID;
 use openssl::x509::X509;
 use std::path::Path;
+use std::str::FromStr;
 
 static GOOD_CERTIFICATE: &str = r#"
 -----BEGIN CERTIFICATE-----
@@ -74,39 +75,36 @@ fDGmAkjHrspiorTruphHk+cymJfjAGqZ0l6il4Wi5w4R5jrxnJMhkxbjr/PG5xCS
 static LEAF_CERTIFICATE_PATH: &str = "./tests/leaf.cert.pem";
 
 #[test]
-fn svid_from_pem() {
-    let svid = SVID::<X509>::from_pem(GOOD_CERTIFICATE);
-    assert!(svid.is_ok());
+fn svid_from_str() {
+    assert!(SVID::<X509>::from_str(GOOD_CERTIFICATE).is_ok());
 }
 
 #[test]
-fn uri_from_pem() {
-    let svid = SVID::<X509>::from_pem(GOOD_CERTIFICATE).unwrap();
+fn uri_from_str() {
+    let svid = SVID::<X509>::from_str(GOOD_CERTIFICATE).unwrap();
     assert_eq!(svid.uri().to_string(), GOOD_CERTIFICATE_URI);
 }
 
 #[test]
-fn trust_domain_from_pem() {
-    let svid = SVID::<X509>::from_pem(GOOD_CERTIFICATE).unwrap();
+fn trust_domain_from_str() {
+    let svid = SVID::<X509>::from_str(GOOD_CERTIFICATE).unwrap();
     assert_eq!(svid.uri().path(), "/path/service");
 }
 
 #[test]
-fn path_from_pem() {
-    let svid = SVID::<X509>::from_pem(GOOD_CERTIFICATE).unwrap();
+fn path_from_str() {
+    let svid = SVID::<X509>::from_str(GOOD_CERTIFICATE).unwrap();
     assert_eq!(svid.uri().trust_domain(), "dev.acme.com");
 }
 
 #[test]
-#[should_panic]
-fn svid_from_invalid_pem() {
-    let _svid = SVID::<X509>::from_pem(BAD_CERTIFICATE).unwrap();
+fn svid_from_invalid_str() {
+    assert!(SVID::<X509>::from_str(BAD_CERTIFICATE).is_err());
 }
 
 #[test]
 fn svid_from_path() {
-    let svid = SVID::<X509>::from_path(Path::new(LEAF_CERTIFICATE_PATH));
-    assert!(svid.is_ok());
+    assert!(SVID::<X509>::from_path(Path::new(LEAF_CERTIFICATE_PATH)).is_ok());
 }
 
 #[test]
@@ -128,19 +126,19 @@ fn path_from_cert_path() {
 }
 
 #[test]
-fn match_spiffe_uri_pem() {
-    let svid = SVID::<X509>::from_pem(GOOD_CERTIFICATE).unwrap();
+fn match_spiffe_uri_str() {
+    let svid = SVID::<X509>::from_str(GOOD_CERTIFICATE).unwrap();
     assert_eq!(true, svid.match_spiffe_uri(&GOOD_CERTIFICATE_URI).unwrap());
 }
 
 #[test]
-fn match_fail_invalid_spiffe_uri_pem() {
-    let svid = SVID::<X509>::from_pem(GOOD_CERTIFICATE).unwrap();
+fn match_fail_invalid_spiffe_uri_str() {
+    let svid = SVID::<X509>::from_str(GOOD_CERTIFICATE).unwrap();
     assert_eq!(false, svid.match_spiffe_uri("spiffe://another_id.org/path").unwrap());
 }
 
 #[test]
-fn match_fail_blank_spiffe_uri_pem() {
-    let svid = SVID::<X509>::from_pem(GOOD_CERTIFICATE).unwrap();
+fn match_fail_blank_spiffe_uri_str() {
+    let svid = SVID::<X509>::from_str(GOOD_CERTIFICATE).unwrap();
     assert_eq!(false, svid.match_spiffe_uri("").unwrap());
 }

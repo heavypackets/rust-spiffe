@@ -3,6 +3,7 @@ use std::fs::File;
 use std::io::prelude::*;
 use std::ops::Deref;
 use std::path::Path;
+use std::str::FromStr;
 
 use ::uri::URI;
 
@@ -46,15 +47,6 @@ pub enum SVID<T> {
 }
 
 impl SVID<X509> {
-    pub fn from_pem(pem: &str) -> Result<SVID<X509>> {
-        let cert = X509::from_pem(pem.as_bytes()).chain_err(|| ErrorKind::InvalidPEM)?;
-
-        match SVID::<X509>::parse_uri(&cert) {
-            Ok(uri) => Ok(SVID::X509{cert, uri}),
-            Err(e) => Err(e.chain_err(|| ErrorKind::InvalidSAN))
-        }
-    }
-
     pub fn from_path(path: &Path) -> Result<SVID<X509>> {
         let mut f = File::open(path).chain_err(|| path)?;
 
@@ -101,6 +93,19 @@ impl SVID<X509> {
         }
 
         Err(ErrorKind::InvalidSAN)?
+    }
+}
+
+impl FromStr for SVID<X509> {
+    type Err = Error;
+
+    fn from_str(pem: &str) -> Result<SVID<X509>> {
+        let cert = X509::from_pem(pem.as_bytes()).chain_err(|| ErrorKind::InvalidPEM)?;
+
+        match SVID::<X509>::parse_uri(&cert) {
+            Ok(uri) => Ok(SVID::X509{cert, uri}),
+            Err(e) => Err(e.chain_err(|| ErrorKind::InvalidSAN))
+        }
     }
 }
 
