@@ -23,6 +23,11 @@ error_chain!{
             description("An error during the validation of SVID SANs")
             display("Unable to parse SVID: SANs do not contain a valid SPIFFE URI")
         }
+
+        MultipleURIFound(first: String, next: String) {
+            description("An error during the validation of SVID certificate")
+            display("Multiple valid SPIFFE URIs found in SVID: {} & {}", first, next)
+        }
     }
 
     links {
@@ -88,16 +93,23 @@ impl SVID<X509> {
             None => Err(ErrorKind::InvalidSAN)?,
         };
 
-        // Assumes one valid SPIFFE uri in SAN field per SPIFFE specification - returns first found
+        let mut validated_uri: Option<URI> = None;
+        // Only allows one valid SPIFFE uri in SAN field per SPIFFE specification - returns error if multiple found
         for san_entry in sans {
             if let Some(uri) = san_entry.uri() {
-                if let Ok(validated_uri) = uri.parse::<URI>() {
-                    return Ok(validated_uri);
+                if let Ok(spiffe_uri) = uri.parse::<URI>() {
+                    if validated_uri.is_some() {
+                        Err(ErrorKind::MultipleURIFound(
+                            validated_uri.unwrap().to_string(),
+                            uri.to_string(),
+                        ))?;
+                    }
+                    validated_uri = Some(spiffe_uri);
                 }
             }
         }
 
-        Err(ErrorKind::InvalidSAN)?
+        validated_uri.ok_or_else(|| Error::from(ErrorKind::InvalidSAN))
     }
 }
 
