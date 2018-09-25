@@ -9,18 +9,18 @@ use ::uri::URI;
 error_chain!{
     errors { 
         InvalidFilePath(path: String) {
-            description("An error during the parsing of an SVID")
+            description("An IO error during the parsing of an SVID caused")
             display("Unable to parse SVID: Invalid file path {}", path)
         }
 
         InvalidPEM {
-            description("An error during the parsing of an SVID")
+            description("An error during the parsing of an SVID PEM")
             display("Unable to parse SVID: Not a valid PEM")
         }
 
-        InvalidPEMSAN {
-            description("An error during the parsing of an SVID")
-            display("Unable to parse SVID: PEM SANs (Subject Alternate Name) do not contain a valid SPIFFE URI")
+        InvalidSAN {
+            description("An error during the validation of SVID SANs")
+            display("Unable to parse SVID: SANs do not contain a valid SPIFFE URI")
         }
     }
 
@@ -51,7 +51,7 @@ impl SVID<X509> {
 
         match SVID::<X509>::parse_uri(&cert) {
             Ok(uri) => Ok(SVID::X509{cert, uri}),
-            Err(e) => Err(e.chain_err(|| ErrorKind::InvalidPEMSAN))
+            Err(e) => Err(e.chain_err(|| ErrorKind::InvalidSAN))
         }
     }
 
@@ -88,7 +88,7 @@ impl SVID<X509> {
     fn parse_uri(cert :&X509) -> Result<URI> {
         let sans = match cert.subject_alt_names() {
             Some(val) => val,
-            None => Err(ErrorKind::InvalidPEMSAN)?
+            None => Err(ErrorKind::InvalidSAN)?
         };
 
         // Assumes one valid SPIFFE uri in SAN field per SPIFFE specification - returns first found
@@ -100,7 +100,7 @@ impl SVID<X509> {
             }
         }
 
-        Err(ErrorKind::InvalidPEMSAN)?
+        Err(ErrorKind::InvalidSAN)?
     }
 }
 
