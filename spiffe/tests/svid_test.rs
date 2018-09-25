@@ -1,8 +1,12 @@
+#[macro_use]
+extern crate assert_matches;
+
 extern crate openssl;
 extern crate spiffe;
 
 use openssl::x509::X509;
 use spiffe::svid::SVID;
+use spiffe::svid::{Error, ErrorKind};
 use std::path::Path;
 use std::str::FromStr;
 
@@ -98,13 +102,35 @@ fn path_from_str() {
 }
 
 #[test]
-fn svid_from_invalid_str() {
-    assert!(SVID::<X509>::from_str(BAD_CERTIFICATE).is_err());
+fn svid_from_invalid_str_bad_san() {
+    if let Err(err) = SVID::<X509>::from_str(BAD_CERTIFICATE) {
+        assert_matches!(err, Error(ErrorKind::InvalidSAN, _));
+    } else {
+        panic!();
+    }
+}
+
+#[test]
+fn svid_from_invalid_str_bad_pem() {
+    if let Err(err) = SVID::<X509>::from_str("") {
+        assert_matches!(err, Error(ErrorKind::InvalidPEM, _));
+    } else {
+        panic!();
+    }
 }
 
 #[test]
 fn svid_from_path() {
     assert!(SVID::<X509>::from_path(Path::new(LEAF_CERTIFICATE_PATH)).is_ok());
+}
+
+#[test]
+fn svid_from_invalid_path() {
+    if let Err(err) = SVID::<X509>::from_path(Path::new("./tests/does_not_exist.pem")) {
+        assert_matches!(err, Error(ErrorKind::InvalidFilePath(ref path), _) if path == "./tests/does_not_exist.pem");
+    } else {
+        panic!();
+    }
 }
 
 #[test]
