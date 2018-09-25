@@ -42,7 +42,7 @@ impl<'a> From<&'a Path> for ErrorKind {
 
 #[derive(Debug)]
 pub enum SVID<T> {
-    X509 { leaf: T, uri: URI }
+    X509 { cert: T, uri: URI }
 }
 
 impl SVID<X509> {
@@ -50,7 +50,7 @@ impl SVID<X509> {
         let cert = X509::from_pem(pem.as_bytes()).chain_err(|| ErrorKind::InvalidPEM)?;
 
         match SVID::<X509>::parse_uri(&cert) {
-            Ok(uri) => Ok(SVID::X509{leaf: cert, uri}),
+            Ok(uri) => Ok(SVID::X509{cert, uri}),
             Err(e) => Err(e.chain_err(|| ErrorKind::InvalidPEMSAN))
         }
     }
@@ -64,8 +64,10 @@ impl SVID<X509> {
         let cert = X509::from_pem(contents.as_bytes()).chain_err(|| ErrorKind::InvalidPEM)?;
 
         match SVID::<X509>::parse_uri(&cert) {
-            Ok(uri) => Ok(SVID::X509{leaf: cert, uri}),
-            Err(e) => Err(e.chain_err(|| ErrorKind::InvalidPEMSAN))
+            Ok(uri) => Ok(SVID::X509{cert, uri}),
+            Err(e) => Err(e.chain_err(|| ErrorKind::InvalidPEM))
+        }
+    }
         }
     }
 
@@ -74,9 +76,9 @@ impl SVID<X509> {
         &uri
     }
 
-    pub fn leaf(&self) -> &X509 {
-        let SVID::X509{leaf, ..} = self;
-        &leaf
+    pub fn x509(&self) -> &X509 {
+        let SVID::X509{cert, ..} = self;
+        &cert
     }
 
     pub fn match_spiffe_uri(&self, uri: &str) -> Result<bool> {
@@ -106,8 +108,10 @@ impl Deref for SVID<X509> {
     type Target = X509;
 
     fn deref(&self) -> &X509 {
-        let SVID::X509{leaf, ..} = self;
-        &leaf
+        let SVID::X509{cert
+, ..} = self;
+        &cert
+
     }
 }
 
