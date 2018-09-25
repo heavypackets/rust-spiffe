@@ -1,8 +1,8 @@
-extern crate spiffe;
 extern crate openssl;
+extern crate spiffe;
 
-use spiffe::svid::SVID;
 use openssl::x509::X509;
+use spiffe::svid::SVID;
 use std::path::Path;
 use std::str::FromStr;
 
@@ -134,7 +134,11 @@ fn match_spiffe_uri_str() {
 #[test]
 fn match_fail_invalid_spiffe_uri_str() {
     let svid = SVID::<X509>::from_str(GOOD_CERTIFICATE).unwrap();
-    assert_eq!(false, svid.match_spiffe_uri("spiffe://another_id.org/path").unwrap());
+    assert_eq!(
+        false,
+        svid.match_spiffe_uri("spiffe://another_id.org/path")
+            .unwrap()
+    );
 }
 
 #[test]

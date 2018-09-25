@@ -1,9 +1,9 @@
 use hyper::Url;
-use std::string::ToString;
 use std::str::FromStr;
+use std::string::ToString;
 
 error_chain!{
-    errors { 
+    errors {
         InvalidURI(uri: String) {
             description("An error dURIng the parsing of a SPIFFE URI")
             display("Unable to parse SVID: Not a valid SPIFFE URI {}", uri)
@@ -20,7 +20,7 @@ impl<'a> From<&'a Url> for ErrorKind {
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct URI {
-    uri: Url
+    uri: Url,
 }
 
 impl URI {
@@ -34,11 +34,17 @@ impl URI {
     }
 
     pub fn validate_spiffe_uri(uri: Url) -> Result<Url> {
-        if uri.query().is_some() || uri.port().is_some() || (uri.username() != "") || 
-            uri.password().is_some() || uri.fragment().is_some() || uri.host().is_none() || 
-            (uri.scheme() != "spiffe") || (uri.path() == "/") || (uri.path() == "") 
-        { 
-                Err(ErrorKind::from(&uri))?
+        if uri.query().is_some()
+            || uri.port().is_some()
+            || (uri.username() != "")
+            || uri.password().is_some()
+            || uri.fragment().is_some()
+            || uri.host().is_none()
+            || (uri.scheme() != "spiffe")
+            || (uri.path() == "/")
+            || (uri.path() == "")
+        {
+            Err(ErrorKind::from(&uri))?
         }
 
         Ok(uri)
@@ -56,13 +62,11 @@ impl FromStr for URI {
 
     fn from_str(uri: &str) -> Result<URI> {
         match uri.parse::<Url>() {
-            Ok(uri) => {
-                match URI::validate_spiffe_uri(uri) {
-                    Ok(validated_uri) => Ok(URI{ uri: validated_uri }),
-                    Err(e) => Err(e)?
-                }
+            Ok(uri) => match URI::validate_spiffe_uri(uri) {
+                Ok(validated_uri) => Ok(URI { uri: validated_uri }),
+                Err(e) => Err(e)?,
             },
-            Err(_) => Err(ErrorKind::InvalidURI(uri.to_string()))?
+            Err(_) => Err(ErrorKind::InvalidURI(uri.to_string()))?,
         }
     }
 }

@@ -54,7 +54,9 @@ fn invalid_spiffe_id_contains_port() {
 #[test]
 #[should_panic]
 fn invalid_spiffe_id_contains_username_password() {
-    "spiffe://admin:password@example.org/path".parse::<URI>().unwrap();
+    "spiffe://admin:password@example.org/path"
+        .parse::<URI>()
+        .unwrap();
 }
 
 #[test]
@@ -72,13 +74,17 @@ fn invalid_spiffe_id_no_scheme() {
 #[test]
 #[should_panic]
 fn invalid_spiffe_id_contains_query() {
-    "spiffe://example.org/path?somequery".parse::<URI>().unwrap();
+    "spiffe://example.org/path?somequery"
+        .parse::<URI>()
+        .unwrap();
 }
 
 #[test]
 #[should_panic]
 fn invalid_spiffe_id_contains_fragment() {
-    "spiffe://example.org/path#somequery".parse::<URI>().unwrap();
+    "spiffe://example.org/path#somequery"
+        .parse::<URI>()
+        .unwrap();
 }
 
 #[test]
@@ -95,7 +101,9 @@ fn fetch_trust_special_characters() {
 
 #[test]
 fn fetch_path_domain() {
-    let id = "spiffe://example.org/path/to/a/new/year".parse::<URI>().unwrap();
+    let id = "spiffe://example.org/path/to/a/new/year"
+        .parse::<URI>()
+        .unwrap();
     assert_eq!(id.path(), "/path/to/a/new/year");
 }
 
@@ -111,7 +119,9 @@ fn test_equality() {
 #[test]
 fn test_inequality() {
     let id1 = "spiffe://example.org/path/".parse::<URI>().unwrap();
-    let id2 = "spiffe://example.org/someotherpath/".parse::<URI>().unwrap();
+    let id2 = "spiffe://example.org/someotherpath/"
+        .parse::<URI>()
+        .unwrap();
 
     assert_ne!(id1, id2);
     assert_ne!(id2, id1);

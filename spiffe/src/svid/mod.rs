@@ -5,10 +5,10 @@ use std::ops::Deref;
 use std::path::Path;
 use std::str::FromStr;
 
-use ::uri::URI;
+use uri::URI;
 
 error_chain!{
-    errors { 
+    errors {
         InvalidFilePath(path: String) {
             description("An IO error during the parsing of an SVID caused")
             display("Unable to parse SVID: Invalid file path {}", path)
@@ -43,7 +43,7 @@ impl<'a> From<&'a Path> for ErrorKind {
 
 #[derive(Debug)]
 pub enum SVID<T> {
-    X509 { cert: T, uri: URI }
+    X509 { cert: T, uri: URI },
 }
 
 impl SVID<X509> {
@@ -52,29 +52,29 @@ impl SVID<X509> {
 
         let mut contents = String::new();
         f.read_to_string(&mut contents).chain_err(|| path)?;
-        
+
         let cert = X509::from_pem(contents.as_bytes()).chain_err(|| ErrorKind::InvalidPEM)?;
 
         match SVID::<X509>::parse_uri(&cert) {
-            Ok(uri) => Ok(SVID::X509{cert, uri}),
-            Err(e) => Err(e.chain_err(|| ErrorKind::InvalidPEM))
+            Ok(uri) => Ok(SVID::X509 { cert, uri }),
+            Err(e) => Err(e.chain_err(|| ErrorKind::InvalidPEM)),
         }
     }
 
     pub fn from_x509(cert: X509) -> Result<SVID<X509>> {
         match SVID::<X509>::parse_uri(&cert) {
-            Ok(uri) => Ok(SVID::X509{cert, uri}),
-            Err(e) => Err(e.chain_err(|| ErrorKind::InvalidPEM))
+            Ok(uri) => Ok(SVID::X509 { cert, uri }),
+            Err(e) => Err(e.chain_err(|| ErrorKind::InvalidPEM)),
         }
     }
 
     pub fn uri(&self) -> &URI {
-        let SVID::X509{uri, ..} = self;
+        let SVID::X509 { uri, .. } = self;
         &uri
     }
 
     pub fn x509(&self) -> &X509 {
-        let SVID::X509{cert, ..} = self;
+        let SVID::X509 { cert, .. } = self;
         &cert
     }
 
@@ -82,17 +82,17 @@ impl SVID<X509> {
         Ok(self.uri().to_string().eq_ignore_ascii_case(uri))
     }
 
-    fn parse_uri(cert :&X509) -> Result<URI> {
+    fn parse_uri(cert: &X509) -> Result<URI> {
         let sans = match cert.subject_alt_names() {
             Some(val) => val,
-            None => Err(ErrorKind::InvalidSAN)?
+            None => Err(ErrorKind::InvalidSAN)?,
         };
 
         // Assumes one valid SPIFFE uri in SAN field per SPIFFE specification - returns first found
         for san_entry in sans {
             if let Some(uri) = san_entry.uri() {
                 if let Ok(validated_uri) = uri.parse::<URI>() {
-                    return Ok(validated_uri)
+                    return Ok(validated_uri);
                 }
             }
         }
@@ -108,8 +108,8 @@ impl FromStr for SVID<X509> {
         let cert = X509::from_pem(pem.as_bytes()).chain_err(|| ErrorKind::InvalidPEM)?;
 
         match SVID::<X509>::parse_uri(&cert) {
-            Ok(uri) => Ok(SVID::X509{cert, uri}),
-            Err(e) => Err(e.chain_err(|| ErrorKind::InvalidSAN))
+            Ok(uri) => Ok(SVID::X509 { cert, uri }),
+            Err(e) => Err(e.chain_err(|| ErrorKind::InvalidSAN)),
         }
     }
 }
@@ -118,9 +118,7 @@ impl Deref for SVID<X509> {
     type Target = X509;
 
     fn deref(&self) -> &X509 {
-        let SVID::X509{cert, ..} = self;
+        let SVID::X509 { cert, .. } = self;
         &cert
-
     }
 }
-
