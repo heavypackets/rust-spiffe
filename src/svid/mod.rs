@@ -60,6 +60,11 @@ impl SVID<X509> {
             Err(e) => Err(e.chain_err(|| ErrorKind::InvalidPEM))
         }
     }
+
+    pub fn from_x509(cert: X509) -> Result<SVID<X509>> {
+        match SVID::<X509>::parse_uri(&cert) {
+            Ok(uri) => Ok(SVID::X509{cert, uri}),
+            Err(e) => Err(e.chain_err(|| ErrorKind::InvalidPEM))
         }
     }
 
