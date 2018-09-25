@@ -118,8 +118,7 @@ impl Deref for SVID<X509> {
     type Target = X509;
 
     fn deref(&self) -> &X509 {
-        let SVID::X509{cert
-, ..} = self;
+        let SVID::X509{cert, ..} = self;
         &cert
 
     }
