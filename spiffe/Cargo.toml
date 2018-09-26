@@ -8,7 +8,7 @@ openssl = { version = "0.10", features = ["vendored"] }
 error-chain = "0.12.0"
 hyper = "0.10.0"
 protobuf = "~2"
-grpcio = "^0.3"
+grpcio = { version = "0.3", default-features = false, features = ["protobuf-codec"] }
 futures = "^0.1.15"
 
 [dev-dependencies]
