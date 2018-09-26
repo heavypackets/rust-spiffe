@@ -18,74 +18,45 @@
 #![allow(unused_imports)]
 #![allow(unused_results)]
 
+const METHOD_SPIFFE_WORKLOAD_API_FETCH_X509_SVID: ::grpcio::Method<super::workload_api::X509SVIDRequest, super::workload_api::X509SVIDResponse> = ::grpcio::Method {
+    ty: ::grpcio::MethodType::ServerStreaming,
+    name: "/SpiffeWorkloadAPI/FetchX509SVID",
+    req_mar: ::grpcio::Marshaller { ser: ::grpcio::pb_ser, de: ::grpcio::pb_de },
+    resp_mar: ::grpcio::Marshaller { ser: ::grpcio::pb_ser, de: ::grpcio::pb_de },
+};
 
-// interface
-
-pub trait SpiffeWorkloadAPI {
-    fn fetch_x509_svid(&self, o: ::grpc::RequestOptions, p: super::workload_api::X509SVIDRequest) -> ::grpc::StreamingResponse<super::workload_api::X509SVIDResponse>;
+pub struct SpiffeWorkloadApiClient {
+    client: ::grpcio::Client,
 }
 
-// client
-
-pub struct SpiffeWorkloadAPIClient {
-    grpc_client: ::grpc::Client,
-    method_FetchX509SVID: ::std::sync::Arc<::grpc::rt::MethodDescriptor<super::workload_api::X509SVIDRequest, super::workload_api::X509SVIDResponse>>,
-}
-
-impl SpiffeWorkloadAPIClient {
-    pub fn with_client(grpc_client: ::grpc::Client) -> Self {
-        SpiffeWorkloadAPIClient {
-            grpc_client: grpc_client,
-            method_FetchX509SVID: ::std::sync::Arc::new(::grpc::rt::MethodDescriptor {
-                name: "/SpiffeWorkloadAPI/FetchX509SVID".to_string(),
-                streaming: ::grpc::rt::GrpcStreaming::ServerStreaming,
-                req_marshaller: Box::new(::grpc::protobuf::MarshallerProtobuf),
-                resp_marshaller: Box::new(::grpc::protobuf::MarshallerProtobuf),
-            }),
+impl SpiffeWorkloadApiClient {
+    pub fn new(channel: ::grpcio::Channel) -> Self {
+        SpiffeWorkloadApiClient {
+            client: ::grpcio::Client::new(channel),
         }
     }
 
-    pub fn new_plain(host: &str, port: u16, conf: ::grpc::ClientConf) -> ::grpc::Result<Self> {
-        ::grpc::Client::new_plain(host, port, conf).map(|c| {
-            SpiffeWorkloadAPIClient::with_client(c)
-        })
+    pub fn fetch_x509_svid_opt(&self, req: &super::workload_api::X509SVIDRequest, opt: ::grpcio::CallOption) -> ::grpcio::Result<::grpcio::ClientSStreamReceiver<super::workload_api::X509SVIDResponse>> {
+        self.client.server_streaming(&METHOD_SPIFFE_WORKLOAD_API_FETCH_X509_SVID, req, opt)
     }
-    pub fn new_tls<C : ::tls_api::TlsConnector>(host: &str, port: u16, conf: ::grpc::ClientConf) -> ::grpc::Result<Self> {
-        ::grpc::Client::new_tls::<C>(host, port, conf).map(|c| {
-            SpiffeWorkloadAPIClient::with_client(c)
-        })
-    }
-}
 
-impl SpiffeWorkloadAPI for SpiffeWorkloadAPIClient {
-    fn fetch_x509_svid(&self, o: ::grpc::RequestOptions, p: super::workload_api::X509SVIDRequest) -> ::grpc::StreamingResponse<super::workload_api::X509SVIDResponse> {
-        self.grpc_client.call_server_streaming(o, p, self.method_FetchX509SVID.clone())
+    pub fn fetch_x509_svid(&self, req: &super::workload_api::X509SVIDRequest) -> ::grpcio::Result<::grpcio::ClientSStreamReceiver<super::workload_api::X509SVIDResponse>> {
+        self.fetch_x509_svid_opt(req, ::grpcio::CallOption::default())
+    }
+    pub fn spawn<F>(&self, f: F) where F: ::futures::Future<Item = (), Error = ()> + Send + 'static {
+        self.client.spawn(f)
     }
 }
 
-// server
+pub trait SpiffeWorkloadApi {
+    fn fetch_x509_svid(&self, ctx: ::grpcio::RpcContext, req: super::workload_api::X509SVIDRequest, sink: ::grpcio::ServerStreamingSink<super::workload_api::X509SVIDResponse>);
+}
 
-pub struct SpiffeWorkloadAPIServer;
-
-
-impl SpiffeWorkloadAPIServer {
-    pub fn new_service_def<H : SpiffeWorkloadAPI + 'static + Sync + Send + 'static>(handler: H) -> ::grpc::rt::ServerServiceDefinition {
-        let handler_arc = ::std::sync::Arc::new(handler);
-        ::grpc::rt::ServerServiceDefinition::new("/SpiffeWorkloadAPI",
-            vec![
-                ::grpc::rt::ServerMethod::new(
-                    ::std::sync::Arc::new(::grpc::rt::MethodDescriptor {
-                        name: "/SpiffeWorkloadAPI/FetchX509SVID".to_string(),
-                        streaming: ::grpc::rt::GrpcStreaming::ServerStreaming,
-                        req_marshaller: Box::new(::grpc::protobuf::MarshallerProtobuf),
-                        resp_marshaller: Box::new(::grpc::protobuf::MarshallerProtobuf),
-                    }),
-                    {
-                        let handler_copy = handler_arc.clone();
-                        ::grpc::rt::MethodHandlerServerStreaming::new(move |o, p| handler_copy.fetch_x509_svid(o, p))
-                    },
-                ),
-            ],
-        )
-    }
+pub fn create_spiffe_workload_api<S: SpiffeWorkloadApi + Send + Clone + 'static>(s: S) -> ::grpcio::Service {
+    let mut builder = ::grpcio::ServiceBuilder::new();
+    let instance = s.clone();
+    builder = builder.add_server_streaming_handler(&METHOD_SPIFFE_WORKLOAD_API_FETCH_X509_SVID, move |ctx, req, resp| {
+        instance.fetch_x509_svid(ctx, req, resp)
+    });
+    builder.build()
 }

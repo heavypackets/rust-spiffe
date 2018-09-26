@@ -7,9 +7,9 @@ authors = ["Sabree Blackmon <sabree@heavypackets.sh>"]
 openssl = { version = "0.10", features = ["vendored"] }
 error-chain = "0.12.0"
 hyper = "0.10.0"
-grpc = "~0.5"
 protobuf = "~2"
-tls-api = "~0.1"
+grpcio = "^0.3"
+futures = "^0.1.15"
 
 [dev-dependencies]
 assert_matches = "1.3"
