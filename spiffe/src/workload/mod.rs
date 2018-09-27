@@ -1,8 +1,3 @@
-mod workload_api;
-mod workload_api_grpc;
-
-use self::workload_api::{X509SVIDRequest, X509SVIDResponse};
-use self::workload_api_grpc::*;
 use futures::Future;
 use futures::Stream;
 use grpcio::{ChannelBuilder, EnvBuilder};
@@ -13,8 +8,15 @@ use std::vec::Vec;
 use svid;
 use svid::Bundle;
 
+mod workload_api;
+mod workload_api_grpc;
+
+use self::workload_api::{X509SVIDRequest, X509SVIDResponse};
+use self::workload_api_grpc::*;
+
 lazy_static! {
-    static ref DEFAULT_CLIENT_TIMEOUT: Duration = { Duration::new(15, 0) };
+    static ref INITIAL_CONNECTION_TIMEOUT: Duration = { Duration::new(15, 0) };
+    static ref MAX_CLIENT_BACKOFF: Duration = { Duration::new(300, 0) };
 }
 
 error_chain!{
@@ -87,11 +89,12 @@ pub struct Client<T: APIKind> {
 }
 
 impl Client<X509> {
-    pub fn new(addr: &str) -> Client<X509> {
+    pub fn new(addr: &str, backoff: Option<Duration>) -> Client<X509> {
+        let backoff = backoff.unwrap_or(*MAX_CLIENT_BACKOFF);
         let env = Arc::new(EnvBuilder::new().build());
         let channel = ChannelBuilder::new(env)
-            .initial_reconnect_backoff(::std::time::Duration::new(30, 0))
-            .max_reconnect_backoff(::std::time::Duration::new(300, 0))
+            .initial_reconnect_backoff(backoff)
+            .max_reconnect_backoff(backoff)
             .connect(addr);
         Client::<X509> {
             client: X509(SpiffeWorkloadApiClient::new(channel)),
@@ -104,7 +107,7 @@ impl Client<X509> {
         metadata.add_str("workload.spiffe.io", "true").unwrap();
 
         let options = ::grpcio::CallOption::default()
-            .timeout(timeout.unwrap_or(*DEFAULT_CLIENT_TIMEOUT))
+            .timeout(timeout.unwrap_or(*INITIAL_CONNECTION_TIMEOUT))
             .headers(metadata.build());
 
         let rx = client
