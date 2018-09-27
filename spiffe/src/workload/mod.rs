@@ -24,7 +24,7 @@ error_chain!{
             description("An error during the configuration of client")
             display("Unable to configure native client")
         }
-        FetchFailure 
+        FetchFailure {
             description("An error during the the fetch of api payload")
             display("Unable to fetch api payload")
         }
