@@ -5,7 +5,7 @@ use std::string::ToString;
 error_chain!{
     errors {
         InvalidURI(uri: String) {
-            description("An error dURIng the parsing of a SPIFFE URI")
+            description("An error during the parsing of a SPIFFE URI")
             display("Unable to parse SVID: Not a valid SPIFFE URI {}", uri)
         }
 
