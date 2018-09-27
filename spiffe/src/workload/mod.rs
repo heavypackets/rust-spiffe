@@ -3,17 +3,23 @@ mod workload_api_grpc;
 
 use self::workload_api::{X509SVIDRequest, X509SVIDResponse};
 use self::workload_api_grpc::*;
+use futures::Future;
 use futures::Stream;
 use grpcio::{ChannelBuilder, EnvBuilder};
 use std::collections::HashMap;
 use std::sync::Arc;
+use std::time::Duration;
 use std::vec::Vec;
 use svid;
-use svid::{Bundle, Key};
+use svid::Bundle;
+
+lazy_static! {
+    static ref DEFAULT_CLIENT_TIMEOUT: Duration = { Duration::new(15, 0) };
+}
 
 error_chain!{
     errors {
-        ClientFail
+        WorkloadClientFail
         FetchFail
     }
 
@@ -42,7 +48,7 @@ pub struct X509Response {
 }
 
 impl X509Response {
-    pub fn new(response: X509SVIDResponse) -> Result<X509Response> {
+    fn new(response: X509SVIDResponse) -> Result<X509Response> {
         let mut svids = Vec::<svid::SVID<svid::X509>>::with_capacity(response.svids.len());
 
         for x in response.svids.into_iter() {
@@ -83,44 +89,39 @@ pub struct Client<T: APIKind> {
 impl Client<X509> {
     pub fn new(addr: &str) -> Client<X509> {
         let env = Arc::new(EnvBuilder::new().build());
-        let channel = ChannelBuilder::new(env).connect(addr);
+        let channel = ChannelBuilder::new(env)
+            .initial_reconnect_backoff(::std::time::Duration::new(30, 0))
+            .max_reconnect_backoff(::std::time::Duration::new(300, 0))
+            .connect(addr);
         Client::<X509> {
             client: X509(SpiffeWorkloadApiClient::new(channel)),
         }
     }
 
-    pub fn fetch(&self) -> Result<X509Response> {
+    pub fn fetch_once(&self, timeout: Option<Duration>) -> Result<Result<X509Response>> {
         let X509(ref client) = self.client;
+        let mut metadata = ::grpcio::MetadataBuilder::new();
+        metadata.add_str("workload.spiffe.io", "true").unwrap();
+
+        let options = ::grpcio::CallOption::default()
+            .timeout(timeout.unwrap_or(*DEFAULT_CLIENT_TIMEOUT))
+            .headers(metadata.build());
 
         let rx = client
-            .fetch_x509_svid(&X509SVIDRequest::new())
-            .chain_err(|| ErrorKind::ClientFail)?;
+            .fetch_x509_svid_opt(&X509SVIDRequest::new(), options)
+            .chain_err(|| ErrorKind::WorkloadClientFail)?;
 
-        let mut result = None;
-        {
-            let rx = rx.and_then(|rs| {
-                result = Some(rs.clone());
+        let items = rx.take(1).collect().wait();
 
-                Ok(())
-            });
-
-            let _wait = rx.wait();
-        }
-
-        if let Some(res) = result {
-            X509Response::new(res)
-        } else {
-            Err(ErrorKind::FetchFail)?
+        match items {
+            Ok(item) => {
+                if let Some(val) = item.get(0) {
+                    Ok(X509Response::new(val.clone()))
+                } else {
+                    Err(ErrorKind::FetchFail)?
+                }
+            }
+            Err(e) => Err(Error::with_chain(e, ErrorKind::FetchFail))?,
         }
     }
-
-    /*
-    // do(options, sucessful fetch, failed fetch)
-    pub fn spawn_fetch<S, F>(
-        c: Client<X509>,
-        options: &ClientSpawnOptions,
-        on_fetch: S,
-        on_retry: F,
-    ) -> JoinHandle<Result<()>> {
-    } */
 }

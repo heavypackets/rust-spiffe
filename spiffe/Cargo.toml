@@ -10,6 +10,7 @@ hyper = "0.10.0"
 protobuf = "~2.0"
 grpcio = { git = "https://github.com/heavypackets/grpc-rs", version = "0.3", default-features = false, features = ["protobuf-codec"] }
 futures = "^0.1.24"
+lazy_static = "*"
 
 [dev-dependencies]
 assert_matches = "1.3"
