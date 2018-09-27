@@ -1,6 +1,5 @@
 use std::fmt;
-use std::fs::File;
-use std::io::prelude::*;
+use std::fs;
 use std::ops::Deref;
 use std::path::Path;
 
@@ -18,6 +17,11 @@ error_chain!{
         InvalidPEM {
             description("An error during the parsing of an SVID PEM")
             display("Unable to parse SVID: Not a valid PEM")
+        }
+
+        InvalidDER {
+            description("An error during the parsing of an SVID DER")
+            display("Unable to parse SVID: Not a valid DER")
         }
 
         InvalidSAN {
@@ -49,11 +53,52 @@ impl<'a> From<&'a Path> for ErrorKind {
 
 pub trait SVIDKind {}
 
-pub struct X509(OpenSSlX509Cert);
+pub type Bundle = Vec<u8>;
+pub type Key = Vec<u8>;
+
+pub struct X509 {
+    cert: OpenSSlX509Cert,
+    key: Option<Key>,
+    bundle: Option<Bundle>,
+}
+
+impl X509 {
+    pub fn new(cert: OpenSSlX509Cert, key: Option<Key>, bundle: Option<Bundle>) -> X509 {
+        X509 {
+            cert,
+            key: match key {
+                Some(k) => Some(k.to_vec()),
+                None => None,
+            },
+            bundle: match bundle {
+                Some(b) => Some(b.to_vec()),
+                None => None,
+            },
+        }
+    }
+
+    pub fn cert(&self) -> &OpenSSlX509Cert {
+        &self.cert
+    }
+
+    pub fn key(&self) -> Option<&Vec<u8>> {
+        match self.key {
+            Some(ref k) => Some(&k),
+            None => None,
+        }
+    }
+
+    pub fn bundle(&self) -> Option<&Vec<u8>> {
+        match self.bundle {
+            Some(ref b) => Some(&b),
+            None => None,
+        }
+    }
+}
 
 impl fmt::Debug for X509 {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        let X509(cert) = self;
+        let X509 { cert, .. } = self;
         write!(
             f,
             "OpenSSL X509 Certificate: {{ {:?} }}",
@@ -71,40 +116,61 @@ pub struct SVID<T: SVIDKind> {
 }
 
 impl SVID<X509> {
-    pub fn from_pem(pem: &str) -> Result<SVID<X509>> {
-        let cert = OpenSSlX509Cert::from_pem(pem.as_bytes()).chain_err(|| ErrorKind::InvalidPEM)?;
+    pub fn from_pem(pem: &[u8], key: Option<Key>, bundle: Option<Bundle>) -> Result<SVID<X509>> {
+        let cert = OpenSSlX509Cert::from_pem(pem).chain_err(|| ErrorKind::InvalidPEM)?;
 
         match SVID::<X509>::parse_uri(&cert) {
             Ok(uri) => Ok(SVID::<X509> {
-                doc: X509(cert),
+                doc: X509::new(cert, key, bundle),
                 uri,
             }),
             Err(e) => Err(e.chain_err(|| ErrorKind::InvalidSAN)),
         }
     }
 
-    pub fn from_path(path: &Path) -> Result<SVID<X509>> {
-        let mut f = File::open(path).chain_err(|| path)?;
-
-        let mut contents = String::new();
-        f.read_to_string(&mut contents).chain_err(|| path)?;
-
+    pub fn from_path(path: &Path, key: Option<&Path>, bundle: Option<&Path>) -> Result<SVID<X509>> {
+        let contents = fs::read(path).chain_err(|| path)?;
         let cert =
-            OpenSSlX509Cert::from_pem(contents.as_bytes()).chain_err(|| ErrorKind::InvalidPEM)?;
+            OpenSSlX509Cert::from_pem(contents.as_slice()).chain_err(|| ErrorKind::InvalidPEM)?;
+
+        let key_contents = match key {
+            Some(path) => Some(fs::read(path).chain_err(|| path)?.to_vec()),
+            None => None,
+        };
+        let bundle_contents = match bundle {
+            Some(path) => Some(fs::read(path).chain_err(|| path)?.to_vec()),
+            None => None,
+        };
 
         match SVID::<X509>::parse_uri(&cert) {
             Ok(uri) => Ok(SVID::<X509> {
-                doc: X509(cert),
+                doc: X509::new(cert, key_contents, bundle_contents),
                 uri,
             }),
             Err(e) => Err(e.chain_err(|| ErrorKind::InvalidPEM)),
         }
     }
 
-    pub fn from_x509(cert: OpenSSlX509Cert) -> Result<SVID<X509>> {
+    pub fn from_der(der: &[u8], key: Option<Key>, bundle: Option<Bundle>) -> Result<SVID<X509>> {
+        let cert = OpenSSlX509Cert::from_der(der).chain_err(|| ErrorKind::InvalidDER)?;
+
         match SVID::<X509>::parse_uri(&cert) {
             Ok(uri) => Ok(SVID::<X509> {
-                doc: X509(cert),
+                doc: X509::new(cert, key, bundle),
+                uri,
+            }),
+            Err(e) => Err(e.chain_err(|| ErrorKind::InvalidSAN)),
+        }
+    }
+
+    pub fn from_x509(
+        cert: OpenSSlX509Cert,
+        key: Option<Key>,
+        bundle: Option<Bundle>,
+    ) -> Result<SVID<X509>> {
+        match SVID::<X509>::parse_uri(&cert) {
+            Ok(uri) => Ok(SVID::<X509> {
+                doc: X509::new(cert, key, bundle),
                 uri,
             }),
             Err(e) => Err(e.chain_err(|| ErrorKind::InvalidPEM)),

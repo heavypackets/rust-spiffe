@@ -6,6 +6,6 @@ extern crate grpcio;
 extern crate hyper;
 extern crate protobuf;
 
-pub mod api;
 pub mod svid;
 pub mod uri;
+pub mod workload;

@@ -78,30 +78,30 @@ static LEAF_CERTIFICATE_PATH: &str = "./tests/leaf.cert.pem";
 
 #[test]
 fn svid_from_pem() {
-    assert!(SVID::<X509>::from_pem(GOOD_CERTIFICATE).is_ok());
+    assert!(SVID::<X509>::from_pem(GOOD_CERTIFICATE.as_bytes(), None, None).is_ok());
 }
 
 #[test]
 fn uri_from_pem() {
-    let svid = SVID::<X509>::from_pem(GOOD_CERTIFICATE).unwrap();
+    let svid = SVID::<X509>::from_pem(GOOD_CERTIFICATE.as_bytes(), None, None).unwrap();
     assert_eq!(svid.uri().to_string(), GOOD_CERTIFICATE_URI);
 }
 
 #[test]
 fn trust_domain_from_pem() {
-    let svid = SVID::<X509>::from_pem(GOOD_CERTIFICATE).unwrap();
+    let svid = SVID::<X509>::from_pem(GOOD_CERTIFICATE.as_bytes(), None, None).unwrap();
     assert_eq!(svid.uri().path(), "/path/service");
 }
 
 #[test]
 fn path_from_pem() {
-    let svid = SVID::<X509>::from_pem(GOOD_CERTIFICATE).unwrap();
+    let svid = SVID::<X509>::from_pem(GOOD_CERTIFICATE.as_bytes(), None, None).unwrap();
     assert_eq!(svid.uri().trust_domain(), "dev.acme.com");
 }
 
 #[test]
 fn svid_from_invalid_pem_bad_san() {
-    if let Err(err) = SVID::<X509>::from_pem(BAD_CERTIFICATE) {
+    if let Err(err) = SVID::<X509>::from_pem(BAD_CERTIFICATE.as_bytes(), None, None) {
         assert_matches!(err, Error(ErrorKind::InvalidSAN, _));
     } else {
         panic!();
@@ -110,7 +110,7 @@ fn svid_from_invalid_pem_bad_san() {
 
 #[test]
 fn svid_from_invalid_pem_bad_pem() {
-    if let Err(err) = SVID::<X509>::from_pem("") {
+    if let Err(err) = SVID::<X509>::from_pem(&[0 as u8], None, None) {
         assert_matches!(err, Error(ErrorKind::InvalidPEM, _));
     } else {
         panic!();
@@ -119,12 +119,12 @@ fn svid_from_invalid_pem_bad_pem() {
 
 #[test]
 fn svid_from_path() {
-    assert!(SVID::<X509>::from_path(Path::new(LEAF_CERTIFICATE_PATH)).is_ok());
+    assert!(SVID::<X509>::from_path(Path::new(LEAF_CERTIFICATE_PATH), None, None).is_ok());
 }
 
 #[test]
 fn svid_from_invalid_path() {
-    if let Err(err) = SVID::<X509>::from_path(Path::new("./tests/does_not_exist.pem")) {
+    if let Err(err) = SVID::<X509>::from_path(Path::new("./tests/does_not_exist.pem"), None, None) {
         assert_matches!(err, Error(ErrorKind::InvalidFilePath(ref path), _) if path == "./tests/does_not_exist.pem");
     } else {
         panic!();
@@ -133,31 +133,31 @@ fn svid_from_invalid_path() {
 
 #[test]
 fn uri_from_path() {
-    let svid = SVID::<X509>::from_path(Path::new(LEAF_CERTIFICATE_PATH)).unwrap();
+    let svid = SVID::<X509>::from_path(Path::new(LEAF_CERTIFICATE_PATH), None, None).unwrap();
     assert_eq!(svid.uri().to_string(), GOOD_CERTIFICATE_URI);
 }
 
 #[test]
 fn trust_domain_from_path() {
-    let svid = SVID::<X509>::from_path(Path::new(LEAF_CERTIFICATE_PATH)).unwrap();
+    let svid = SVID::<X509>::from_path(Path::new(LEAF_CERTIFICATE_PATH), None, None).unwrap();
     assert_eq!(svid.uri().path(), "/path/service");
 }
 
 #[test]
 fn path_from_cert_path() {
-    let svid = SVID::<X509>::from_path(Path::new(LEAF_CERTIFICATE_PATH)).unwrap();
+    let svid = SVID::<X509>::from_path(Path::new(LEAF_CERTIFICATE_PATH), None, None).unwrap();
     assert_eq!(svid.uri().trust_domain(), "dev.acme.com");
 }
 
 #[test]
 fn match_spiffe_uri_str() {
-    let svid = SVID::<X509>::from_pem(GOOD_CERTIFICATE).unwrap();
+    let svid = SVID::<X509>::from_pem(GOOD_CERTIFICATE.as_bytes(), None, None).unwrap();
     assert_eq!(true, svid.match_spiffe_uri(&GOOD_CERTIFICATE_URI).unwrap());
 }
 
 #[test]
 fn match_fail_invalid_spiffe_uri_str() {
-    let svid = SVID::<X509>::from_pem(GOOD_CERTIFICATE).unwrap();
+    let svid = SVID::<X509>::from_pem(GOOD_CERTIFICATE.as_bytes(), None, None).unwrap();
     assert_eq!(
         false,
         svid.match_spiffe_uri("spiffe://another_id.org/path")
@@ -167,6 +167,6 @@ fn match_fail_invalid_spiffe_uri_str() {
 
 #[test]
 fn match_fail_blank_spiffe_uri_str() {
-    let svid = SVID::<X509>::from_pem(GOOD_CERTIFICATE).unwrap();
+    let svid = SVID::<X509>::from_pem(GOOD_CERTIFICATE.as_bytes(), None, None).unwrap();
     assert_eq!(false, svid.match_spiffe_uri("").unwrap());
 }
