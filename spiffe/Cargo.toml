@@ -2,15 +2,19 @@
 name = "spiffe"
 version = "0.1.0"
 authors = ["Sabree Blackmon <sabree@heavypackets.sh>"]
+edition = "2018"
 
 [dependencies]
-openssl = { version = "0.10", features = ["vendored"] }
-error-chain = "0.12.0"
-hyper = "0.10.0"
-protobuf = "~2.0"
-grpcio = { git = "https://github.com/heavypackets/grpc-rs", version = "0.3", default-features = false, features = ["protobuf-codec"] }
-futures = "0.1.24"
-lazy_static = "^1.1"
+openssl = "0.10.30"
+error-chain = "0.12.4"
+hyper = "0.13.8"
+protobuf = "2.18.0"
+grpcio = { git = "https://github.com/tikv/grpc-rs", rev = "b9ddf27a81d5cfef057638ffc2d02bd34d85a422", default-features = false, features = ["protobuf-codec", "openssl"] }
+futures = "0.3.6"
+lazy_static = "1.4.0"
+url = "2.1.1"
+log = "0.4.11"
+zeroize = { version = "1.1.1", features = ["zeroize_derive"] }
 
 [dev-dependencies]
-assert_matches = "1.3"
+assert_matches = "1.4.0"

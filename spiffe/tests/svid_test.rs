@@ -4,8 +4,8 @@ extern crate assert_matches;
 extern crate openssl;
 extern crate spiffe;
 
-use spiffe::svid::{Error, ErrorKind};
-use spiffe::svid::{SVID, X509};
+use spiffe::svid::x509::{Error, ErrorKind, X509};
+use spiffe::svid::SVID;
 use std::path::Path;
 
 static GOOD_CERTIFICATE: &str = r#"

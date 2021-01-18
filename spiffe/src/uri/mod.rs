@@ -1,8 +1,9 @@
-use hyper::Url;
+use error_chain::error_chain;
 use std::str::FromStr;
 use std::string::ToString;
+use url::Url;
 
-error_chain!{
+error_chain! {
     errors {
         InvalidURI(uri: String) {
             description("An error during the parsing of a SPIFFE URI")
@@ -13,8 +14,8 @@ error_chain!{
 }
 
 impl<'a> From<&'a Url> for ErrorKind {
-    fn from(url: &'a Url) -> Self {
-        ErrorKind::InvalidURI(url.as_str().to_string())
+    fn from(uri: &'a Url) -> Self {
+        ErrorKind::InvalidURI(uri.to_string())
     }
 }
 
@@ -30,7 +31,7 @@ impl URI {
 
     pub fn trust_domain(&self) -> String {
         // This unwrap should never fail -- if it does, something is wrong and please file bug
-        self.uri.host_str().unwrap().to_string()
+        self.uri.host().unwrap().to_string()
     }
 
     pub fn validate_spiffe_uri(uri: Url) -> Result<Url> {
@@ -44,10 +45,10 @@ impl URI {
             || (uri.path() == "/")
             || (uri.path() == "")
         {
-            Err(ErrorKind::from(&uri))?
+            Err(ErrorKind::from(&uri).into())
+        } else {
+            Ok(uri)
         }
-
-        Ok(uri)
     }
 }
 
@@ -64,9 +65,9 @@ impl FromStr for URI {
         match uri.parse::<Url>() {
             Ok(uri) => match URI::validate_spiffe_uri(uri) {
                 Ok(validated_uri) => Ok(URI { uri: validated_uri }),
-                Err(e) => Err(e)?,
+                Err(e) => Err(e),
             },
-            Err(_) => Err(ErrorKind::InvalidURI(uri.to_string()))?,
+            Err(_) => Err(ErrorKind::InvalidURI(uri.to_string()).into()),
         }
     }
 }
